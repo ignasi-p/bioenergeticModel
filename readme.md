@@ -1,6 +1,6 @@
 # Modelling microbial processes using a bioenergetic approach #
 
-## Background##
+## Background ##
 
 The stoichiometry of the _catabolic_ and _anabolic_ reactions for a microbial process can be established by element and charge balancing. From the stoichiometry, Gibbs energy changes can be calculated for each of these two processes ([Heijnen and Kleerebezem, 2010][1]; [Smeaton and Van Cappellen, 2018][2]). But the overall growth reaction (the metabolic reaction) can not be determined unless the growth yield, _Y_, is experimentally established or unless it is estimated. Once the overall growth reaction is known, ΔG<sub>met</sub>, the Gibbs energy change for the overall metabolic reaction, can be calculated. See Examples 7, 8 and 19 in [(Heijnen and Kleerebezem, 2010)][1]. The information for **only one** of the three characteristics of the metabolic process is required: (1) growth yield, (2) ΔG<sub>met</sub>, or (3) the stoichiometry of the overall growth reaction; the other two can then be derived.
 
@@ -10,7 +10,7 @@ Having a method to estimate values of either the ΔG<sub>met</sub>, or the growt
 
 But instead of estimating either _Y_ (the growth yield) or ΔG<sub>met</sub>, the microbial system can be modeled if the rates of catabolism, anabolism, dormancy and maintenance (including decay) are calculated as the chemical environment changes, resulting in a calculated overall growth rate, which in turn allows the calculation of growth yields, ΔG<sub>met</sub>, and the overall stoichiometry of the metabolic process(es). This method is used in ([Vallino and Huber, 2018][4]; [Bajracharya et al., 2022][5]).
 
-## The model of Bajracharya et al. (2022)##
+## The model of Bajracharya et al. (2022) ##
 
 [Bajracharya et al. (2022)][5] have published a brilliant paper describing a method to calculate catabolism, anabolism, dormancy and maintenance (including decay). The method is here implemented using the [Phreeqc][6] code by [Parkhurst and Appelo (2###)][7]. 
 The model is available in the [releases section][8].
