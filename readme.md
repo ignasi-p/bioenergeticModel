@@ -151,5 +151,5 @@ References
 [5]: https://www.tandfonline.com/doi/full/10.1080/01490451.2021.1998256
 [6]: https://www.usgs.gov/software/phreeqc-version-3
 [7]: http://pubs.usgs.gov/tm/06/a43
-[8]: https://github.com/ignasi-p/eq-diagr/releases/latest
+[8]: https://github.com/ignasi-p/bioenergeticModel/releases/latest
 [9]: https://srd.nist.gov/JPCRD/jpcrdS2Vol11.pdf
