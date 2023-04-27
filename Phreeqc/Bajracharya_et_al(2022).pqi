@@ -1,0 +1,1249 @@
+DATABASE wateq4f_3.7.3_no-redox_S_CH4_N2.dat
+#DATABASE wateq4f_3.7.3_no-redox_S_CH4_N2.dat
+
+TITLE .
+!------------------------------------------------------------------------
+ The model in Bajracharya et al. (2022) Geomicrobiology Journal 39, 1–16.
+ https://doi.org/10.1080/01490451.2021.1998256
+ Tables, eqns, etc, refer to this publication.
+   CFB = cellulose fermenting bacteria.
+   frm = fermentation.
+   SRB = sulfate reducing bacteria.
+   [hom] = macromolecular Hydrolyzable Organic Matter, represented by cellulose.
+           Not really needed in the kinetic model as its concentration is constant.
+   [he] = extracellular Hydrolytic Enzymes.
+   'a' and 'i' dessignate active and inactive (dormant) biomass, respectively.
+ - Fe(2): FeS(s) is initially saturated and in the KINETIC stoichiomety sulfide
+ is produced simultaneously with Fe(2) so that FeS(s) saturation is maintained.
+ for charge compensation, two chloride ions are added in the kinetic equation.
+ - Sulfate is kept constant at the initial value by taking it out from
+ the KINETIC stoichiomety of sulfate reduction, two Na+ are added for
+ charge balance.
+!------------------------------------------------------------------------
+
+SOLUTION_MASTER_SPECIES
+#element   species   alk  gfw_or_formula
+#                                        element_gfw
+X_srb_a    X_srb_a   0.0   CH1.8O0.5N0.2    24.6      # Active SRB biomass = C5H9O2.5N
+X_srb_i    X_srb_i   0.0   CH1.8O0.5N0.2    24.6      # Inactive SRB biomass = C5H9O2.5N
+X_cfb_a    X_cfb_a   0.0   CH1.8O0.5N0.2    24.6      # Active CFB biomass = C5H9O2.5N
+X_cfb_i    X_cfb_i   0.0   CH1.8O0.5N0.2    24.6      # Inactive CFB biomass = C5H9O2.5N
+[hom]      [hom]     0.0   C6H12O6          180.15    # Hydrolyzable Organic Matter (cellulose)
+[he]       [he]      0.0   CH1.8O0.5N0.2    24.6      # extracellular Hydrolytic Enzymes, same composition as biomass
+Ace        Ace-      0.0   CH3COO           59.044    # Acetate CH3COO-
+Glucose    Glucose   0.0   C6H12O6          180.15    # Glucose C6H12O6
+
+SOLUTION_SPECIES
+    2 H+ + CO3-2 + H2O - 2O2 = CH4
+      log_k  -9999  # remove the formation of CH4 in very reducing conditions
+    2 H+ + 2 e- = H2
+      log_k       -3.08             
+      delta_h     -4.200  #kJ/mol # 82WAG/EVA
+    [he] = [he]           # extracellular Hydrolytic Enzymes
+      log_k    0
+      -gamma 1 0
+    [hom] = [hom]         # Hydrolyzable Organic Matter
+      log_k    0
+      -gamma 1 0
+    X_srb_a = X_srb_a     # Active SRB Biomass
+      log_k    0
+      -gamma 1 0
+    X_srb_i = X_srb_i     # Inactive (dormant) SRB Biomass
+      log_k    0
+      -gamma 1 0
+    X_cfb_a = X_cfb_a     # Active CFB (fermenters) Biomass
+      log_k    0
+      -gamma 1 0
+    X_cfb_i = X_cfb_i     # Inactive CFB Biomass
+      log_k    0
+      -gamma 1 0
+    Glucose = Glucose     # Glucose
+      log_k 0
+    Ace- = Ace-           # Acetate
+      log_k 0
+    H+ + Ace- = HAce
+      log_k   4.757
+      delta_h +0.41 kJ
+    Ca+2 + Ace- = CaAce+
+      log_k    1.18
+      delta_h +1. kcal
+    Fe+2 + Ace- = FeAce+
+      log_k    1.
+#    H2O + 0.01e- = H2O-0.01
+#      log_k   -9.0 
+
+PHASES
+HOM(s) # used to keep a constant conc. of [hom] at 1e-3 mol/kg_w
+      [hom] = [hom]
+      log_k    -3
+
+KNOBS
+    -diagonal_scale        true
+
+USER_PRINT
+-start
+  5 REM # Note: this will be "run" when the first "solution" is calculated
+ 10 PRINT ".******************************************************"
+ 15 PRINT " Saving values of Delta-Gr at 10°C"
+ 20 REM # Save values of Delta-G°r at 10°C
+ 25 REM # note that this is run only if a print-out is made...
+ 26 REM #
+ 30 REM # Eqn.(4) is used here: ?G° = ?G - R T ln(10) logQ
+ 35 REM # where ?G are the data for initial conditions in Table 2
+ 40 REM # and logQ is the value calculated by PhreeqC and printed
+ 45 REM # through User_Punch
+ 50 REM
+100 REM # SO4 reduction with H2(aq). Delta-G°r in kJ/(mol H2)
+120 REM #   H2(aq) + 0.25 H+ + 0.25 SO4-2  --> 0.25 HS- + H2O  eqn.(20)
+140 REM # DG0_25 = -65.19 # kJ/(mol H2), NBS data at 10°C
+145 DG0_t = -66.10 # kJ/(mol H2) from ?G° = ?G - R T ln(10) logQ
+150 PUT(DG0_t, 1)
+210 REM # SO4 reduction with acetate. Delta-G°r in kJ/(C-mol Acetate)
+220 REM #   CH3COO- + SO4-2  -->  2 HCO3- + HS-  eqn.(19)
+230 REM #   0.5 CH3COO- + 0.5 SO4-2 --> HCO3- + 0.5 HS-
+240 REM # DG0_25 = -24.067 # kJ/(C-mol acetate) based on DG°f(acetate) = -369.31 (NBS 1982)
+245 DG0_t = -23.33 # kJ/(C-mol acetate) from ?G° = ?G - R T ln(10) logQ
+250 PUT(DG0_t, 2)
+310 REM # Fermentation of glucose to acetate and H2(aq). Delta-G°r in kJ/(C-mol Glucose)
+320 REM #   C6H12O6 + 4H2O = 2 Ace- + 2 HCO3- + 4H+ + 4H2(aq)  eqn.(18)
+330 REM #   0.1667 C6H12O6 + 0.6667 H2O = 0.3333 CH3COO- + 0.3333 HCO3- + 0.6667 H+ + 0.6667 H2(aq)
+340 REM # DG0_25 = +3.74 # kJ/(C-mol glucose) based on  DG°f(glucose) = -915.9  (1989Goldberg-Tewari)
+341 REM #                                               DG°f(acetate) = -369.31 (NBS 1982)
+345 DG0_t = -4.06 # kJ/(C-mol glucose) from ?G° = ?G - R T ln(10) logQ
+350 PUT(DG0_t, 3)
+500 PRINT ".******************************************************"
+510 PRINT " logA(Fe+2)  = ",TRIM(STR_F$(LA("Fe+2"),10,5))
+520 PRINT " logA(SO4-2) = ",TRIM(STR_F$(LA("SO4-2"),10,5))
+530 PRINT " TK = ",,TRIM(STR_F$(TK,10,2))
+900 PRINT ".******************************************************"
+-end
+
+
+CALCULATE_VALUES
+# The Rates are programmed as Calculated_Values,
+# in this way it is possible to output each rate
+# in Selected_Output, or plot them in User_Graphs.
+
+Hours
+  -start
+    10 SAVE SIM_TIME/3600
+  -end
+Days
+  -start
+    10 SAVE SIM_TIME/86400
+  -end
+CellsCFBa
+  -start
+    10 REM # one cell = 1e-13 g, formula C5H9O2.5N = CH1.8O0.5N0.2
+    20 REM # mol.weight 24.6 g bacteria per C-mol
+    30 REM # TOT("X_cfb_a") is in units of C-mol/kg-H2O
+    40 REM # TOT("X_cfb_a") = 1e-14 corresponds to less than 3 cells per kg-H2O
+    70 SAVE TOT("X_cfb_a")*24.6/1e-13
+  -end
+CellsCFBi
+  -start
+    70 SAVE TOT("X_cfb_i")*24.6/1e-13
+  -end
+CellsSRBa
+  -start
+    70 SAVE TOT("X_srb_a")*24.6/1e-13
+  -end
+CellsSRBi
+  -start
+    70 SAVE TOT("X_srb_i")*24.6/1e-13
+  -end
+logCellsCFBa
+  -start
+    60 IF (TOT("X_cfb_a")>1e-14) THEN  x = CALC_VALUE("CellsCFBa") ELSE x = -14
+    70 SAVE x
+  -end
+logCellsCFBi
+  -start
+    60 IF (TOT("X_cfb_i")>1e-14) THEN  x = CALC_VALUE("CellsCFBi") ELSE x = -14
+    70 SAVE x
+  -end
+logCellsSRBa
+  -start
+    60 IF (TOT("X_srb_a")>1e-14) THEN  x = CALC_VALUE("CellsSRBa") ELSE x = -14
+    70 SAVE x
+  -end
+logCellsSRBi
+  -start
+    60 IF (TOT("X_srb_i")>1e-14) THEN  x = CALC_VALUE("CellsSRBi") ELSE x = -14
+    70 SAVE x
+  -end
+
+DG0r_srH2
+  -start
+    10 REM # Delta-G°r for SO4 reduction with H2(aq) in kJ/(mol H2)
+    15 REM # corrected for the temperature of the model
+    20 REM #   4 H2(aq) + H+ + SO4-2  --> HS- + 4 H2O   eqn.(20)
+    40 REM # DG0_25 = -65.648 # kJ/(mol H2)
+    50 REM # DH0 =    -58.390 # kJ/(mol H2)
+    60 REM # the Gibbs-Helmholtz eqn. DG°r(T) / T = DG°r(T0) / T0 + DH°r (1/T - 1/T0)
+    65 REM # also:    DH°r = [ (DG°r(T) / T) - (DG°r(T0) / T0) ] x (1/T - 1/T0)^-1
+    70 REM # DG0_t = (DG0_25 * TK/298.15) + DH0 * TK*((1/TK)-(1/298.15))
+    90 DG0_t = GET(1)
+    95 SAVE DG0_t
+  -end
+logQsrH2
+  -start
+    10 REM # Although eqn.(20) contains one H+ in the LHS (left hand side)
+    15 REM # the biochemical standard Gibbs energy listed in Table 2 is only
+    20 REM # 19.8 kJ/mol larger than the non-biochemical value, indicating
+    25 REM # that they had instead (1/2) H+ in the reaction:
+    30 REM #   2 H2(aq) + 0.5 H+ + 0.5 SO4-2  -->  0.5 HS- + 2 H2O
+    35 REM # a mystery... We use the reaction with one H2(aq).
+    50 logQ = LA("H2O") +0.25*LA("HS_-") -0.25*LA("SO4-2") -LA("H2") -0.25*LA("H+")
+    60 SAVE logQ
+  -end
+ThermFunc_srH2
+  -start
+    10 REM # Calculates MAX(0, 1-(Q/Keq)) with Q = reaction quotient
+    30 R = 0.0083144626 # J/(mol K)
+    40 ln10 = 2.302585092994046
+    50 REM # lnK° = ln(10) logK = -DG°r / (RT)
+    60 logK = - CALC_VALUE("DG0r_srH2") / (ln10*R*TK)
+    70 logQ = CALC_VALUE("logQsrH2")
+    80 logRatio = logQ - logK
+    90 IF(logRatio < -25) THEN logRatio = -25
+   100 X = 0.0
+   110 IF (logRatio < 0) THEN X = (1-10^logRatio)
+   115 IF (X > 1 OR X < 0) THEN PRINT "**** Error in ThermFunc_srH2, X =",X
+   120 SAVE X
+  -end
+DGr_srH2
+  -start
+    10 REM # Delta-Gr for SO4 reduction with H2(aq) in kJ/(mol H2)
+    20 REM # Delta-Gr = Delta-G°r + R T ln Q (where Q is the reaction quotient), eqn.(4)
+    40 R = 0.0083144626 # J/(mol K)
+    50 ln10 = 2.302585092994046
+    60 DG0_t = CALC_VALUE("DG0r_srH2")
+    70 logQ = CALC_VALUE("logQsrH2")
+    80 DG_t = DG0_t + R * TK * ln10 * logQ
+    90 SAVE DG_t
+  -end
+
+DG0r_srAc
+  -start
+    10 REM # Delta-G°r for SO4 reduction with acetate in kJ/(C-mol Acetate)
+    15 REM # corrected for the temperature of the model
+    20 REM #   CH3COO- + SO4-2  -->  2 HCO3- + HS-   eqn.(19)
+    30 REM #   0.5 CH3COO- + 0.5 SO4-2 --> HCO3- + 0.5 HS-
+    40 REM # DG0_25 = -24.067 # kJ/(C-mol acetate) based on DG°f(acetate) = -369.31 (NBS 1982)
+    50 REM # DH0 =     -0.405 # kJ/(C-mol) based on DH°f(acetate) = -486.01 (NBS 1982)
+    60 REM # the Gibbs-Helmholtz eqn. DG°r(T) / T = DG°r(T0) / T0 + DH°r (1/T - 1/T0)
+    70 REM # DG0_t = (DG0_25 * TK/298.15) + DH0 * TK*((1/TK)-(1/298.15))
+    75 DG0_t = GET(2)
+    80 SAVE DG0_t
+  -end
+logQsrAc
+  -start
+    10 REM # Although eqn.(19) contains does not have any H+,
+    15 REM # the biochemical standard Gibbs energy listed in Table 2 is only
+    20 REM # 39.9 kJ/mol larger than the non-biochemical value, indicating
+    25 REM # that they had instead one H+ in the LHS of the reaction
+    30 REM #   CH3COO- + SO4-2  + 2H+  --> 2 CO2 + 2 H2O + HS-
+    35 REM #   0.5 CH3COO- + 0.5 SO4-2  + H+  --> CO2 + H2O + 0.5 HS-
+    40 REM # a mystery... We use the reaction written with HCO3-:
+    45 REM #   0.5 CH3COO- + 0.5 SO4-2  -->  HCO3- + 0.5 HS-   eqn.(19)
+    50 logQ = 0.5*LA("HS_-") + LA("HCO3-") - 0.5*LA("SO4-2") - 0.5*LA("Ace-")
+    60 SAVE logQ
+  -end
+ThermFunc_srAc
+  -start
+    10 REM # Calculates MAX(0, 1-(Q/Keq)) with Q = reaction quotient
+    30 R = 0.0083144626 # J/(mol K)
+    40 ln10 = 2.302585092994046
+    50 REM # lnK° = ln(10) logK = -DG°r / (RT)
+    60 logK = - CALC_VALUE("DG0r_srAc") / (ln10*R*TK)
+    70 logQ = CALC_VALUE("logQsrAc")
+    80 logRatio = logQ - logK
+    90 IF(logRatio < -25) THEN logRatio = -25
+   100 X = 0.0
+   110 IF (logRatio < 0) THEN X = (1-10^logRatio)
+   115 IF (X > 1 OR X < 0) THEN PRINT "**** Error in ThermFunc_srAc, X =",X
+   120 SAVE X
+  -end
+DGr_srAc
+  -start
+    10 REM # Delta-Gr for SO4 reduction with acetate in kJ/(C-mol Acetate)
+    20 REM # Delta-Gr = Delta-G°r + R T ln Q (where Q is the reaction quotient), eqn.(4)
+    40 R = 0.0083144626 # J/(mol K)
+    50 ln10 = 2.302585092994046
+    60 DG0_t = CALC_VALUE("DG0r_srAc")
+    70 logQ = CALC_VALUE("logQsrAc")
+    80 DG_t = DG0_t + R * TK * ln10 * logQ
+    90 SAVE DG_t
+  -end
+
+DG0r_frm
+  -start
+    10 REM # Delta-G°r for glucose fermentation to acetate and H2(aq) in kJ/(C-mol Glucose)
+    15 REM # corrected for the temperature of the model
+    20 REM #   C6H12O6 + 4H2O = 2 Ace- + 2 HCO3- + 4H+ + 4H2(aq)  eqn.(18)
+    25 REM # equivalent to: C6H12O6 + 2H2O = 2 Ace- + 2 CO2 + 2H+ + 4 H_2(aq)
+    30 REM # For one C-mol eqn.(18) is:
+    35 REM #    0.1667 C6H12O6 + 0.6667 H2O = 0.3333 CH3COO- + 0.3333 HCO3- + 0.6667 H+ + 0.6667 H2(aq)
+    40 REM # DG0_25 = +3.739 # kJ/(C-mol glucose) based on  DG°f(glucose) = -915.902 (1989Goldberg-Tewari)
+    45 REM #                                                DG°f(acetate) = -369.31  (NBS 1982)
+    50 REM # DH0 = +6.152    # kJ/(C-mol) based on DH°f(glucose) = -1262.19 (1989Goldberg-Tewari)
+    55 REM #                                 DH°f(acetate) =  -486.01 (NBS 1982)
+    60 REM # the Gibbs-Helmholtz eqn.: DG°r(T) / T = (DG°r(T0) / T0) + DH°r (1/T - 1/T0)
+    61 REM #     DG°r(T) = DG°r(T0) (T/T0) + DH°r T (1/T - 1/T0)
+    65 REM # also:    DH°r = [ (DG°r(T) / T) - (DG°r(T0) / T0) ] x (1/T - 1/T0)^-1
+    70 REM # DG0_t = (DG0_25 * TK/298.15) + DH0 * TK*((1/TK)-(1/298.15))
+    75 DG0_t = GET(3)
+    80 SAVE DG0_t
+  -end
+logQfrm
+  -start
+    10 REM # Although eqn.(18) has four H+ in the RHS,
+    15 REM # the biochemical standard Gibbs energy listed in Table 2 is
+    20 REM # -159.7 kJ/mol "larger" than the non-biochemical value, indicating
+    25 REM # that they had NOT a reacction corresponding to one C-mol,
+    40 REM # a mystery... We use the reaction written with for one C-mol:
+    45 REM #   0.1667 C6H12O6 + 0.6667 H2O = 0.3333 CH3COO- + 0.3333 HCO3- + 0.6667 H+ + 0.6667 H2(aq)
+    50 logQ = 0.3333333*LA("Ace-") +0.3333333*LA("HCO3-") +0.6666667*LA("H+") +0.6666667*LA("H2") -0.6666667*LA("H2O") -0.1666667*LA("Glucose")
+    60 SAVE logQ
+  -end
+ThermFunc_frm
+  -start
+    10 REM # Calculates MAX(0, 1-(Q/Keq)) with Q = reaction quotient
+    30 R = 0.0083144626 # J/(mol K)
+    40 ln10 = 2.302585092994046
+    50 REM # lnK° = ln(10) logK = -DG°r / (RT)
+    60 logK = - CALC_VALUE("DG0r_frm") / (ln10*R*TK)
+    70 logQ = CALC_VALUE("logQfrm")
+    80 logRatio = logQ - logK
+    90 IF(logRatio < -25) THEN logRatio = -25
+   100 X = 0.0
+   110 IF (logRatio < 0) THEN X = (1-10^logRatio)
+   115 IF (X > 1 OR X < 0) THEN PRINT "**** Error in ThermFunc_frm, X =",X
+   120 SAVE X
+  -end
+DGr_frm
+  -start
+    10 REM # Delta-Gr for glucose fermentation to acetate and H2(aq) in kJ/(C-mol Glucose)
+    20 REM # Delta-Gr = Delta-G°r + R T ln Q (where Q is the reaction quotient), eqn.(4)
+    40 R = 0.0083144626 # J/(mol K)
+    50 ln10 = 2.302585092994046
+    60 DG0_t = CALC_VALUE("DG0r_frm")
+    70 logQ = CALC_VALUE("logQfrm")
+    80 DG_t = DG0_t + R * TK * ln10 * logQ
+    90 SAVE DG_t
+  -end
+
+R_hydrol
+-start
+   10 REM # Hydrolysis of cellulose to glucose. Rate in C-mol/(L s)
+   20 REM #   HOM + HE  -->  HOM-HE  -->  C6H12O6 + HE (HE is a catalyst)
+   30 REM # Because [HOM] is assumed constant, the reaction is "[nothing] --> Glucose"
+  100 rate = 0
+  120 IF(TOT("[he]")<1E-15) THEN GOTO 300
+  130 Khyd =  1.E-05      # half sat. POM hydrolysis (C-mol POM/L) (p.7 1st paragraph left)
+  140 Kmax =  1.273E-10   # max. rate POM hydrolysis = 1.1e-5 ((C-mol POM/L) day^-1)) Table 1
+  200 REM # eqn.(1) in Bajracharya et al. (2022)
+  210 rate = Kmax * (TOT("[he]")/(Khyd + TOT("[he]")))
+  300 SAVE rate
+-end
+R_frm
+-start
+   10 REM # Calculates the rate of fermentation of glucose into acetate and H2 by CFB.
+   15 REM # Rate in C-mol glucose/(L s)
+   20 REM #   C6H12O6 + 4H2O = 2 Ace- + 2 HCO3- + 4H+ + 4H2(aq)
+   25 REM #   1/6 C6H12O6 + 4/6 H2O = 2/6 Ace- + 2/6 HCO3- + 4/6 H+ + 4/6 H2(aq)
+   30 REM # Fermentation requires the presence of fermenting bacteria (CFB)
+  100 rate = 0
+  120 REM # IF(TOT("Glucose")<1E-20 OR TOT("X_cfb_a")<1E-14) THEN GOTO 300
+  130 Kfrm =  1.33E-04 / 6.   # (C-mol ED/L) half sat. for glucose fermentation
+  140 Kmax =  6.25E-05        # max. fermentation rate = 5.4 (day^-1)
+  150 f = (MOL("Glucose")) / (Kfrm + MOL("Glucose"))
+  180 rate = Kmax * TOT("X_cfb_a") * f * CALC_VALUE("ThermFunc_frm")
+  181 REM PRINT "181 rate =",rate," Glucose =",TOT("Glucose")," f =",f," H2 =",MOL("H2")," acet =",TOT("Ace")," TOT_X =",TOT("X_cfb_a")," func =",CALC_VALUE("ThermFunc_frm")
+  190 REM # note: rate of fermentation must be >= 0 (acetate+H2 are generated)
+  200 REM # IF(rate < 0) THEN rate = 0
+  300 SAVE rate
+-end
+R_HE_prod
+-start
+     10 REM # Production of extracellular Hydrolytic Enzymes [he] by CFB
+   1110 rate_HE = 0  # (C-mol [he]/(L·second))
+   1130 R_ME_act = 2.0602e-4 # maintenance energy for active cells kJ / (C-mol biomass s) = 17.8 kJ / (C-mol biomass d)
+   1145 KHE =      1e-5 # (C-mol [he] /L) inhibition coefficient regulating [he] production
+   1150 DGHE =     2.93 # energy required to produce hydrolytic enzimes kJ/(C-mol HE)
+   1190 R_frm = CALC_VALUE("R_frm")
+   1195 DGr_frm = CALC_VALUE("DGr_frm")
+   1196 IF(TOT("X_cfb_a") < 1E-14) THEN GOTO 3000  # [he] production requires CFB
+   1200   diff = (-R_frm*DGr_frm) - (TOT("X_cfb_a")*R_ME_act) # ** if 'diff' > 0 then growth, if 'diff' < 0 then decay
+   1201   REM PRINT "1201 R_frm =",R_frm," DGr_frm =",DGr_frm," -R_frm*DGr_frm =",-R_frm*DGr_frm," diff =",diff
+   1210   IF(diff <= 0) THEN GOTO 3000
+   1500     REM # *** enough energy for maintenance and perhaps growth and production of [he]
+   1510     rate_HE = (diff / DGHE) * (KHE /(TOT("[he]")+KHE))
+   1521     REM PRINT "1521 [he] production by CFB, rate =",rate_HE," should be >0 TOT_X =",TOT("X_cfb_a")
+   1530     REM IF(rate_HE < 0) THEN rate_HE = 0
+   3000 SAVE rate_HE
+-end
+R_HE_dec
+-start
+     10 REM # Decay of extracellular Hydrolytic Enzymes [he]
+   1155 kHEdec =   5.787e-8 # (1/s) decay rate of hydrolytic enzimes = 0.005 (1/day)
+   1600 REM # First-order decay of [he], eqn.(17)
+   1610 rate_HE_dec = kHEdec * TOT("[he]")
+   1630 REM PRINT "1630 [he] decay, rate =",rate_HE_dec," should be >0 [he] =",TOT("[he]")
+   3000 SAVE rate_HE_dec
+-end
+R_CFB_gr
+-start
+     10 REM # CFB: Growth on glucose in C-mol biomass/(L s)
+     20 REM #   0.175 C6H12O6 + 0.2 NH4+ = CH1.8O0.5N0.2 + 0.05 H2CO3 + 0.4 H2O + 0.2 H+
+     30 REM #   See Table B.1, cross-referemce (CR) nr 95 in supplementary material of
+     40 REM #   Smeaton and Van Cappellen (2018) Geochim. Cosmochim. Acta 241, 1–16. doi:10.1016/j.gca.2018.08.023
+     50 REM # equivalent to: 0.175 C6H12O6 + 0.2 NH4+ = CH1.8O0.5N0.2 + 0.05 HCO3- + 0.4 H2O + 0.25 H+
+     60 REM # in C-mols: 
+   1100 rate = 0  # C-mol /(L s)
+   1105 IF(TOT("Glucose") < 1e-15) THEN GOTO 3000  # growth of CFB requires glucose
+   1130 R_ME_act = 2.0602e-4 # maintenance energy for active cells kJ / (C-mol biomass s) = 17.8 kJ/(C-mol biomass d)
+   1140 DGgr = +211.         # energy required for biomass growth of fermenting bacteria kJ/(C-mol biomass)
+   1145 KHE = 1e-5           # (C-mol [he] /L) inhibition coefficient regulating [he] production
+   1190 R_frm =   CALC_VALUE("R_frm")
+   1195 DGr_frm = CALC_VALUE("DGr_frm")
+   1200 diff = (-R_frm*DGr_frm) - (TOT("X_cfb_a")*R_ME_act) # ** if 'diff' > 0 then growth, if 'diff' < 0 then decay
+   1210 IF(diff > 0) THEN GOTO 1600
+   1220   REM # *** not enough energy for maintenance: this is calculated in 'R_CFB_dec'
+   1230   rate = 0
+   1240   GOTO 3000
+   1600 REM # *** enough energy for maintenance, the remaining energy is used for growth:
+   1700 rate = (diff / DGgr) * (TOT("[he]")/(TOT("[he]")+KHE))
+   1710 IF(rate < 0) THEN rate = 0  # Note: the rate of growth is > 0
+   1721 REM PRINT "1721 growth of CFB, rate =",rate," TOT_X =",TOT("X_cfb_a")
+   3000 SAVE rate
+-end
+R_CFB_dec
+-start
+     10 REM # CFB: decay of active cells. Rate in (C-mol /(L·second))
+   1100 rate_decay = 0
+   1120 IF (TOT("X_cfb_a") < 1E-14) THEN GOTO 3000 # if the biomass is zero, skip further decay
+   1130 R_ME_act = 2.0602e-4 # maintenance energy for active cells kJ / (C-mol biomass s) = 17.8 kJ / (C-mol biomass d)
+   1135 DGdec =    67 # energy gained from decaying biomass kJ /(C-mol biomass)
+   1190 R_frm =   CALC_VALUE("R_frm")
+   1195 DGr_frm = CALC_VALUE("DGr_frm")
+   1500 REM # ** Get decay rate
+   1510 diff = (-R_frm*DGr_frm) - (TOT("X_cfb_a")*R_ME_act) # ** if 'diff' > 0 then growth, if 'diff' < 0 then decay
+   1511 REM PRINT "1511 R_frm =",R_frm," DGr_frm =",DGr_frm," -R_frm*DGr_frm =",-R_frm*DGr_frm," TOT_X*R_ME=",(TOT("X_cfb_a")*R_ME_act)," diff =",diff
+   1520 IF (diff <= 0) THEN GOTO 1600
+   1521   REM PRINT "1521 growth of biomass, diff =",diff
+   1525   GOTO 3000 # this is calculated in 'R_CFB_gr'
+   1600 REM # ** not enough energy for maintenance: calculate biomass decay (cell death and endogenous respiration).
+   1615 REM # Note: decay is negative (biomass decreases), 'rate_decay' will < 0
+   1620 rate_decay = diff / DGdec
+   1621 REM PRINT "1621 decay of active CFB, rate =",rate_decay," TOT_X =",TOT("X_cfb_a")
+   3000 SAVE rate_decay
+-end
+R_CFB_deact
+-start
+     10 REM # CFB: deactivation of cells (dormancy). Rate in (C-mol /(L·second))
+   1100 rate = 0   # C-mol/(L s)
+   1120 IF (TOT("X_cfb_a") < 1E-14) THEN GOTO 3000 # if the biomass is zero, skip deactivation
+   1130 R_ME_act = 2.0602e-4 # maintenance energy for active cells kJ / (C-mol biomass s) = 17.8 kJ / (C-mol biomass d)
+   1150 k_deac =   1.3889e-5 # Deactivation rate (1/s) = 1.2 (1/d)
+   1190 R_frm =   CALC_VALUE("R_frm")
+   1195 DGr_frm = CALC_VALUE("DGr_frm")
+   1200 REM # ** Get deactivation rate
+   1230 ratio_1 = - (R_frm * DGr_frm) / (TOT("X_cfb_a")*R_ME_act) -1
+   1240 REM # calculate 'tanh(x)' = (exp(x) - exp(-x)) / (exp(x) + exp(-x))
+   1245 REM #                     = (exp(2x)-1) / (exp(2x)+1)
+   1250 exp2x = EXP(2 * ratio_1)
+   1260 tanh = (exp2x - 1) / (exp2x + 1)
+   1270 theta = 0.5*(tanh+1)
+   1280 IF (theta > 1 OR theta < 0) THEN PRINT "**** Error in CFB_deact, theta = ",theta
+   1620 rate = k_deac * (1-theta) * TOT("X_cfb_a")
+   1621 REM PRINT "1621 deact of CFB, rate =",rate," TOT_X =",TOT("X_cfb_a")
+   3000 SAVE rate
+-end
+R_CFB_act
+-start
+     10 REM # CFB: Activation of dormant cells. Rate in (C-mol /(L·second))
+   1100 rate = 0   # C-mol /(L s)
+   1120 IF (TOT("X_cfb_i") < 1E-14) THEN GOTO 3000 # if the biomass is zero, skip activation
+   1130 R_ME_act = 2.0602e-4  # maintenance energy for active cells kJ / (C-mol biomass s) = 17.8 kJ / (C-mol biomass d)
+   1155 k_act =    1.3889e-5  # Activation rate (1/s) = 1.2 (1/d)
+   1190 R_frm =   CALC_VALUE("R_frm")
+   1195 DGr_frm = CALC_VALUE("DGr_frm")
+   1200 REM # ** Get activation rate of dormant bacteria
+   1205 theta = 1.0
+   1210 IF (TOT("X_cfb_a") < 1E-14) THEN GOTO 1300
+   1230   ratio_1 = - (R_frm * DGr_frm) / (TOT("X_cfb_a")*R_ME_act) -1
+   1240   REM # calculate 'tanh(x)' = (exp(x) - exp(-x)) / (exp(x) + exp(-x))
+   1245   REM #                     = (exp(2x)-1) / (exp(2x)+1)
+   1250   exp2x = EXP(2 * ratio_1)
+   1260   tanh = (exp2x - 1) / (exp2x + 1)
+   1270   theta = 0.5*(tanh+1)
+   1280   IF (theta > 1 OR theta < 0) THEN PRINT "**** Error in CFB_act, theta = ",theta
+   1300 rate = k_act * theta * TOT("X_cfb_i")
+   1621 REM PRINT "1621 activation of dormant CFB, rate =",rate," TOT_Xi =",TOT("X_cfb_i")
+   3000 SAVE rate
+-end
+R_CFBi_dec
+-start
+     10 REM # CFB: Maintenance and decay of dormant cells. Rate in (C-mol /(L·second))
+   1100 rate = 0   # C-mol /(L s)
+   1120 IF (TOT("X_cfb_i") < 1E-14) THEN GOTO 3000 # if the biomass is zero, skip further decay
+   1160 R_ME_in = 3.58796e-6 # maintenance energy for inactive (dormant) cells kJ / (C-mol biomass s) = 0.31 kJ / (C-mol biomass d)
+   1165 DGdec_in = 67 # energy gained from decaying biomass kJ /(C-mol biomass)
+   1500 REM # ** Get decay rate
+   1620 rate = TOT("X_cfb_i") * R_ME_in / (-DGdec_in)
+   1621 REM PRINT "1621 decay of dormant CFB, rate =",rate," TOT_Xi =",TOT("X_cfb_i")
+   1630 REM # Note: the rate is < 0
+   3000 SAVE rate
+-end
+
+R_SO4_red_acet
+-start
+   10 REM # SO4 reduction by SRB with acetate. Rate in C-mol acetate/(L s)
+   20 REM #   0.5 CH3COO- + 0.5 SO4-2 --> HCO3- + 0.5 HS-
+  100 rate = 0  # C-mol acetate /(L s)
+  120 IF(TOT("X_srb_a")<1E-14) THEN GOTO 300
+  130 Kace =  2.0000E-03 / 2. # half sat. for Acetate (C-mol of Ace/L)
+  140 Kmax =  3.3912E-04      # max. rate of SO4 reduction by SRB with acetate (1/second)) = 29.3 1/day
+  150 f = MOL("Ace-")/(Kace + MOL("Ace-"))
+  180 rate = Kmax * TOT("X_srb_a") * f * CALC_VALUE("ThermFunc_srAc")
+  181 REM PRINT "181 SRB with acet, rate =",rate," TOT_X=",TOT("X_srb_a")
+  300 SAVE rate
+-end
+R_SO4_red_H2
+-start
+   10 REM # SO4 reduction by SRB with H2(aq). Rate in mol H2/(L s)
+   20 REM #   H2(aq) + (1/4) H+ + (1/4) SO4-2  -->  (1/4) HS- + H2O
+  100 rate = 0 # mol-H2 /(L s)
+  120 IF(TOT("X_srb_a")<1E-14) THEN GOTO 300
+  130 Kh2 =   1.000E-05   # half sat. for H2 (mol H2/L)
+  140 Kmax =  8.912E-05   # max. rate of SO4 reduction by SRB with H2 (1/second)) = 7.7 (1/day)
+  150 f = MOL("H2")/(Kh2 + MOL("H2"))
+  180 rate = Kmax * TOT("X_srb_a") * f * CALC_VALUE("ThermFunc_srH2")
+  181 REM PRINT "181 SRB with H2, rate =",rate," TOT_X=",TOT("X_srb_a")
+  300 SAVE rate
+-end
+
+R_SRB_gr_ac
+-start
+     10 REM # SRB: Growth on acetate
+     20 REM #   0.525 CH3COO- + 0.2 NH4+ +0.275 H+ = CH1.8O0.5N0.2 + 0.05 HCO3- + 0.4 H2O
+     30 REM #   See Table B.1, cross-referemce (CR) nr 76 in supplementary material of
+     40 REM #   Smeaton and Van Cappellen (2018) Geochim. Cosmochim. Acta 241, 1–16. doi:10.1016/j.gca.2018.08.023
+   1110 rate =  0  # (C-mol biomass /(L·s))
+   1130 R_ME_act = 2.0602e-4 # maintenance energy for active cells kJ / (C-mol biomass s) = 17.8 kJ / (C-mol biomass d)
+   1140 DGgr = +426.         # energy required for biomass growth of SRB kJ / (C-mol biomass)
+   1190 R_srb_ac =   CALC_VALUE("R_SO4_red_acet")
+   1195 DGr_srb_ac = CALC_VALUE("DGr_srAc")
+   1196 R_srb_H2 =   CALC_VALUE("R_SO4_red_H2")
+   1198 DGr_srb_H2 = CALC_VALUE("DGr_srH2")
+   1500 REM # ** Get decay rate
+   1505 XR = TOT("X_srb_a")*R_ME_act
+   1540 diff = (-R_srb_ac*DGr_srb_ac) + (-R_srb_H2*DGr_srb_H2) - XR  # ** if 'diff' > 0 then growth, if 'diff' < 0 then decay
+   1560 IF(diff > 0) THEN GOTO 1600
+   1561   REM # *** not enough energy for maintenance: this is calculated in 'SRB_dec'
+   1565   GOTO 3000
+   1600 REM # *** enough energy for maintenance, the remaining energy is used for growth:
+   1700 rate = diff / DGgr
+   1721 REM PRINT "1721 growth of SRB on acet, rate =",rate," TOT_X =",TOT("X_srb_a")
+   3000 SAVE rate
+-end
+R_SRB_gr_H2
+-start
+     10 REM # SRB: Growth on acetate/CO2
+     20 REM #   0.35 CH3COO- + 0.3 CO2 + 0.2 NH4+ +0.7 H2 + 0.15 H+ = CH1.8O0.5N0.2 + 0.8 H2O
+     30 REM #   See Table B.1, cross-referemce (CR) nr 83 in supplementary material of
+     40 REM #   Smeaton and Van Cappellen (2018) Geochim. Cosmochim. Acta 241, 1–16. doi:10.1016/j.gca.2018.08.023
+     50 REM # Note that the proportion between acetate and CO2 may vary between SRB.
+     60 REM # equivalent to:
+     70 REM #   0.35 CH3COO- + 0.3 HCO3- + 0.2 NH4+ +0.7 H2 + 0.45 H+ = CH1.8O0.5N0.2 + 1.1 H2O
+   1110 rate =  0  # (C-mol biomass /(L·s))
+   1111 REM # **************************************************
+   1115 REM # Growth on H2+CO2+acetate not included in the model
+   1116 REM # **************************************************
+   1120 GOTO 3000
+   1130 REM R_ME_act = 2.0602e-4 # maintenance energy for active cells kJ / (C-mol biomass s) = 17.8 kJ / (C-mol biomass d)
+   1140 REM DGgr =    +426.      # energy required for biomass growth of SRB kJ / (C-mol biomass)
+   1190 R_srb_ac =   CALC_VALUE("R_SO4_red_acet")
+   1195 DGr_srb_ac = CALC_VALUE("DGr_srAc")
+   1196 R_srb_H2 =   CALC_VALUE("R_SO4_red_H2")
+   1198 DGr_srb_H2 = CALC_VALUE("DGr_srH2")
+   1500 REM # ** Get decay rate
+   1505 XR = TOT("X_srb_a")*R_ME_act
+   1540 diff = (-R_srb_ac*DGr_srb_ac) + (-R_srb_H2*DGr_srb_H2) - XR  # ** if 'diff' > 0 then growth, if 'diff' < 0 then decay
+   1560 IF(diff > 0) THEN GOTO 1600
+   1561   REM # *** not enough energy for maintenance: this is calculated in 'SRB_dec'
+   1565   GOTO 3000
+   1600 REM # *** enough energy for maintenance, the remaining energy is used for growth:
+   1700 rate = diff / DGgr
+   1721 REM PRINT "1721 growth of SRB on H2, rate =",rate," TOT_X =",TOT("X_srb_a")
+   3000 SAVE rate
+-end
+R_SRB_dec
+-start
+     10 REM # SRB: decay of active cells. Rate in (C-mol biomass /(L·s))
+   1100 rate = 0   # C-mol biomass /(L·s)
+   1120 IF (TOT("X_srb_a") < 1E-14) THEN GOTO 3000 # if the biomass is zero, skip further decay
+   1130 R_ME_act = 2.0602e-4 # maintenance energy for active cells kJ / (C-mol biomass s) = 17.8 kJ / (C-mol biomass d)
+   1135 DGdec =    67. # energy gained from decaying biomass kJ /(C-mol biomass)
+   1190 R_srb_ac =   CALC_VALUE("R_SO4_red_acet")
+   1195 DGr_srb_ac = CALC_VALUE("DGr_srAc")
+   1196 R_srb_H2 =   CALC_VALUE("R_SO4_red_H2")
+   1198 DGr_srb_H2 = CALC_VALUE("DGr_srH2")
+   1500 REM # ** Get decay rate
+   1505 XR = TOT("X_srb_a")*R_ME_act
+   1540 diff = (-R_srb_ac*DGr_srb_ac) + (-R_srb_H2*DGr_srb_H2) - XR # ** if 'diff' > 0 then growth, if 'diff' < 0 then decay
+   1560 IF (diff < 0) THEN GOTO 1600
+   1561   REM PRINT "1561 growth of SRB, diff =",diff
+   1565   GOTO 3000 # this is calculated in 'X_srb_gr'
+   1600 REM # ** not enough energy for maintenance: calculate biomass decay (cell death and endogenous respiration).
+   1605 REM PRINT "1605 SRB decay, diff =",diff
+   1615 REM # Note: decay rate is negative (biomass decreases)
+   1620 rate = diff / DGdec
+   1621 REM PRINT "1621 decay of active SRB, rate =",rate," TOT_X =",TOT("X_srb_a")
+   3000 SAVE rate
+-end
+R_SRB_deact
+-start
+     10 REM # SRB: deactivation of cells (dormancy). Rate in (C-mol /(L·s))
+   1100 rate = 0   # C-mol /(L·s)
+   1120 IF (TOT("X_srb_a") < 1E-14) THEN GOTO 3000 # if the biomass is zero, skip deactivation
+   1130 R_ME_act = 2.0602e-4 # maintenance energy for active cells kJ / (C-mol biomass s) = 17.8 kJ / (C-mol biomass d)
+   1150 k_deac =   1.3889e-5 # Deactivation rate (1/s) = 1.2 (1/d)
+   1190 R_srb_ac =   CALC_VALUE("R_SO4_red_acet")
+   1195 DGr_srb_ac = CALC_VALUE("DGr_srAc")
+   1196 R_srb_H2 =   CALC_VALUE("R_SO4_red_H2")
+   1198 DGr_srb_H2 = CALC_VALUE("DGr_srH2")
+   1200 REM # ** Get deactivation rate
+   1210 XR = TOT("X_srb_a")*R_ME_act
+   1235 REM # if 'ratio' is bigger, then theta is bigger
+   1236 REM # if theta is bigger, then activation is larger and deactivation is smaller
+   1240 ratio = ( (- R_srb_ac * DGr_srb_ac) + (- R_srb_H2 * DGr_srb_H2) ) / XR
+   1260 ratio_1 = ratio -1
+   1265 REM # calculate 'tanh(x)' = (exp(x) - exp(-x)) / (exp(x) + exp(-x))
+   1270 REM #                     = (exp(2x)-1) / (exp(2x)+1)
+   1280 IF(ratio_1 < 0) THEN tanh = -1 ELSE tanh = +1
+   1290 IF(ratio_1 < -15 OR ratio_1 > +15) THEN GOTO 1350  # tanh(x)= +1 when x > 15 and tanh(x)= -1 when x < -15
+   1300   exp2x = EXP(2 * ratio_1)
+   1310   tanh = (exp2x - 1) / (exp2x + 1)
+   1350 theta = 0.5 * ( tanh + 1 )
+   1351 REM PRINT "1351 acet R_srb =",R_srb_ac," DGr_srb =",DGr_srb_ac," -R_srb*DGr_srb =",-R_srb_ac*DGr_srb_ac," XR =",XR
+   1352 REM PRINT "1352 H2   R_srb =",R_srb_H2," DGr_srb =",DGr_srb_H2," -R_srb*DGr_srb =",-R_srb_H2*DGr_srb_H2
+   1380 IF (theta > 1 OR theta < 0) THEN PRINT "**** Error in SRB_deact, theta = ",theta
+   1410 rate = k_deac * (1 - theta) * TOT("X_srb_a")
+   1411 REM PRINT "1411 deact of SRB, rate =",rate," TOT_X =",TOT("X_srb_a")
+   3000 SAVE rate
+-end
+R_SRB_act
+-start
+     10 REM # SRB: Activation of dormant cells. Rate in (C-mol biomass/(L·s))
+   1100 rate = 0   # C-mol biomass/(L·s)
+   1120 IF (TOT("X_srb_i") < 1E-14) THEN GOTO 3000 # if the biomass is zero, skip activation
+   1130 R_ME_act = 2.0602e-4  # maintenance energy for active cells kJ / (C-mol biomass s) = 17.8 kJ / (C-mol biomass d)
+   1155 k_act =    1.3889e-5  # Activation rate (1/s) = 1.2 (1/d)
+   1190 R_srb_ac =   CALC_VALUE("R_SO4_red_acet")
+   1195 DGr_srb_ac = CALC_VALUE("DGr_srAc")
+   1196 R_srb_H2 =   CALC_VALUE("R_SO4_red_H2")
+   1198 DGr_srb_H2 = CALC_VALUE("DGr_srH2")
+   1200 REM # ** Get activation rate of dormant bacteria
+   1210 XR = TOT("X_srb_a")*R_ME_act
+   1235 REM # if 'ratio' is bigger, then theta is bigger
+   1236 REM # if theta is bigger, then activation is larger and deactivation is smaller
+   1240 ratio = ( (- R_srb_ac * DGr_srb_ac) + (- R_srb_H2 * DGr_srb_H2) ) / XR
+   1260 ratio_1 = ratio -1
+   1265 REM # calculate 'tanh(x)' = (exp(x) - exp(-x)) / (exp(x) + exp(-x))
+   1270 REM #                     = (exp(2x)-1) / (exp(2x)+1)
+   1280 IF(ratio_1 < 0) THEN tanh = -1 ELSE tanh = +1
+   1290 IF(ratio_1 < -15 OR ratio_1 > +15) THEN GOTO 1350  # tanh(x)= +1 when x > 15 and tanh(x)= -1 when x < -15
+   1300   exp2x = EXP(2 * ratio_1)
+   1310   tanh = (exp2x - 1) / (exp2x + 1)
+   1350 theta = 0.5 * ( tanh + 1 )
+   1351 REM PRINT "1351 acet R_srb =",R_srb_ac," DGr_srb =",DGr_srb_ac," -R_srb*DGr_srb =",-R_srb_ac*DGr_srb_ac," XR =",XR
+   1352 REM PRINT "1352 H2   R_srb =",R_srb_H2," DGr_srb =",DGr_srb_H2," -R_srb*DGr_srb =",-R_srb_H2*DGr_srb_H2
+   1380 IF (theta > 1 OR theta < 0) THEN PRINT "**** Error in SRB_act, theta = ",theta
+   1410 rate = k_act * theta * TOT("X_srb_i")
+   1412 REM PRINT "1412 activation of dormant SRB, rate =",rate," TOT_Xi =",TOT("X_srb_i")
+   3000 SAVE rate
+-end
+R_SRBi_dec
+-start
+     10 REM # SRB: Maintenance and decay of dormant cells. Rate in (C-mol biomass/(L·s))
+   1100 rate = 0   # C-mol biomass/(L·s)
+   1120 IF (TOT("X_srb_i") < 1E-14) THEN GOTO 3000 # if the biomass is zero, skip further decay
+   1160 R_ME_in = 3.58796e-6 # maintenance energy for inactive (dormant) cells (kJ /(C-mol biomass s)) = 0.31 kJ /(C-mol biomass d)
+   1165 DGdec_in = 67 # energy gained from decaying biomass kJ/(C-mol biomass)
+   1500 REM # ** Get decay rate
+   1620 rate = TOT("X_srb_i") * R_ME_in / (-DGdec_in)
+   1621 REM PRINT "1621 decay of dormant SRB, rate =",rate," TOT_Xi =",TOT("X_srb_i")
+   1630 REM # Note: the rate is < 0
+   3000 SAVE rate
+-end
+
+G_CFB
+-start
+ 10 REM # The energy consumed by growth in Figure S3
+ 20 DGgr = +211. # energy required for biomass growth of fermenting bacteria kJ/(C-mol biomass)
+ 30 Sec2Day = 60.*60.*24.
+ 40 SAVE DGgr * CALC_VALUE("R_CFB_gr")*Sec2Day / TOT("X_cfb_a")
+-end
+E_HE
+-start
+ 10 REM # The energy invested in production of extracellular hydrolytic enzymesin Figure S3
+ 20 DGHE =  2.93 # energy required to produce hydrolytic enzimes kJ/(C-mol HE)
+ 30 Sec2Day = 60.*60.*24.
+ 40 SAVE DGHE * CALC_VALUE("R_HE_prod")*Sec2Day / TOT("X_cfb_a")
+-end
+TE_CFB
+-start
+ 10 REM # The total energy generated by CFB in Figure S3
+ 30 Sec2Day = 60.*60.*24.
+ 40 SAVE -CALC_VALUE("DGr_frm") * CALC_VALUE("R_frm")*Sec2Day / TOT("X_cfb_a")
+-end
+ME_CFB
+-start
+ 10 REM # The maintenance energy for CFB in Figure S3
+ 20 R_ME_act = 2.0602e-4 # maintenance energy for active cells kJ / (C-mol biomass s) = 17.8 kJ / (C-mol biomass d)
+ 30 Sec2Day = 60.*60.*24.
+ 40 SAVE R_ME_act * Sec2Day
+-end
+mu_CFB
+-start
+ 10 REM # The specific growth rate of CFB in Figure S3
+ 30 Sec2Day = 60.*60.*24.
+ 40 SAVE CALC_VALUE("R_CFB_gr")*Sec2Day / TOT("X_cfb_a")
+-end
+
+G_SRB
+-start
+ 10 REM # The energy consumed by growth in Figure S3
+ 20 DGgr = +426. # energy required for biomass growth of SRB kJ / (C-mol biomass)
+ 30 Sec2Day = 60.*60.*24.
+ 40 SAVE DGgr * (CALC_VALUE("R_SRB_gr_ac")+CALC_VALUE("R_SRB_gr_H2"))*Sec2Day / TOT("X_srb_a")
+-end
+TE_SRB
+-start
+ 10 REM # The total energy generated by SRB in Figure S3
+ 30 Sec2Day = 60.*60.*24.
+ 40 xH2 = CALC_VALUE("DGr_srH2")*CALC_VALUE("R_SO4_red_H2")*Sec2Day
+ 50 xAc = CALC_VALUE("DGr_srAc")*CALC_VALUE("R_SO4_red_acet")*Sec2Day
+ 60 SAVE -(xH2 + xAc) / TOT("X_srb_a")
+-end
+ME_SRB
+-start
+ 10 REM # The maintenance energy for SRB in Figure S3
+ 20 R_ME_act = 2.0602e-4 # maintenance energy for active cells kJ / (C-mol biomass s) = 17.8 kJ / (C-mol biomass d)
+ 30 Sec2Day = 60.*60.*24.
+ 40 SAVE R_ME_act * Sec2Day
+-end
+mu_SRB
+-start
+ 10 REM # The specific growth rate of SRB in Figure S3
+ 30 Sec2Day = 60.*60.*24.
+ 40 SAVE (CALC_VALUE("R_SRB_gr_ac") + CALC_VALUE("R_SRB_gr_H2"))*Sec2Day / TOT("X_srb_a")
+-end
+
+Y_glucose
+-start
+ 10 REM # The growth yield of CFB in moles of biomass carbon produced per
+ 20 REM # kJ obtained from glucose fermentation (catabolic reaction)
+ 25 REM # growth in C-mol biomass / (L s) divided with (kJ/(C-mol glucose) * (C-mol glucose) / (L s)) = (C-mol biomass) / kJ
+ 30 SAVE CALC_VALUE("R_CFB_gr") / ( -CALC_VALUE("DGr_frm") * CALC_VALUE("R_frm") )
+-end
+Y_acetate
+-start
+ 10 REM # The growth yield of SRB in moles of biomass carbon produced per
+ 20 REM # kJ obtained from sulfate reduction with acetate (catabolic reaction)
+ 30 REM # SAVE (CALC_VALUE("R_SRB_gr_ac") + CALC_VALUE("R_SRB_gr_H2")) / ( -CALC_VALUE("DGr_srAc") * CALC_VALUE("R_SO4_red_acet") )
+ 35 SAVE (CALC_VALUE("R_SRB_gr_ac")) / ( -CALC_VALUE("DGr_srAc") * CALC_VALUE("R_SO4_red_acet") )
+-end
+Y_H2
+-start
+ 10 REM # The growth yield of SRB in moles of biomass carbon produced per
+ 20 REM # kJ obtained from sulfate reduction with H2 (catabolic reaction)
+ 30 REM # SAVE (CALC_VALUE("R_SRB_gr_ac") ) / ( -CALC_VALUE("DGr_srH2") * CALC_VALUE("R_SO4_red_H2") )
+ 35 SAVE (CALC_VALUE("R_SRB_gr_ac") ) / ( -CALC_VALUE("DGr_srH2") * CALC_VALUE("R_SO4_red_H2") )
+-end
+
+RATES
+
+hydrolysis
+  -start
+    300 SAVE TIME * CALC_VALUE("R_hydrol")
+  -end
+fermentation
+  -start
+    300 SAVE TIME * CALC_VALUE("R_frm")
+  -end
+HE_prod
+  -start
+    300 SAVE TIME * CALC_VALUE("R_HE_prod")
+  -end
+HE_dec
+  -start
+    300 SAVE TIME * CALC_VALUE("R_HE_dec")
+  -end
+CFB_gr
+  -start
+    300 SAVE TIME * CALC_VALUE("R_CFB_gr")
+  -end
+CFB_dec
+  -start
+    300 SAVE TIME * CALC_VALUE("R_CFB_dec")
+  -end
+CFB_deact
+  -start
+    300 SAVE TIME * CALC_VALUE("R_CFB_deact")
+  -end
+CFB_act
+  -start
+    300 SAVE TIME * CALC_VALUE("R_CFB_act")
+  -end
+CFBi_dec
+  -start
+    300 SAVE TIME * CALC_VALUE("R_CFBi_dec")
+  -end
+
+SO4_red_acet
+  -start
+    300 SAVE TIME * CALC_VALUE("R_SO4_red_acet")
+  -end
+SO4_red_H2
+  -start
+    300 SAVE TIME * CALC_VALUE("R_SO4_red_H2")
+  -end
+SRB_gr_ac
+  -start
+    300 SAVE TIME * CALC_VALUE("R_SRB_gr_ac")
+  -end
+SRB_gr_H2
+  -start
+    300 SAVE TIME * CALC_VALUE("R_SRB_gr_H2")
+  -end
+SRB_dec
+  -start
+    300 SAVE TIME * CALC_VALUE("R_SRB_dec")
+  -end
+SRB_deact
+  -start
+    300 SAVE TIME * CALC_VALUE("R_SRB_deact")
+  -end
+SRB_act
+  -start
+    300 SAVE TIME * CALC_VALUE("R_SRB_act")
+  -end
+SRBi_dec
+  -start
+    300 SAVE TIME * CALC_VALUE("R_SRBi_dec")
+  -end
+
+END
+
+
+TITLE .
+!------------------------------------------------------------------------
+ Except for sodium and chloride, data from Bajracharya et al. (2022),
+ cf. Table 2.  Biomass is changed to CFBa = 1.1e-6 C-mol/L,
+ CFBi = 0.9e-6 C-mol/L, etc, so that both active and inactive
+ biomass appear in the diagrams.
+!------------------------------------------------------------------------
+
+SOLUTION 1 - Add Ca 385 mg/L for calcite saturation
+    temp      10
+    pH        7.0
+    pe        -4.02217
+    redox     pe
+    units     mol/L
+    density   1
+    Alkalinity      3.45e-3 # bicarbonate = 3.44e-4
+    S(6)      4.75e-5 # sulfate = 4.68e-5
+    Cl        1e-15
+    N(-3)     0.1 charge
+    Fe        3.78e-6
+    S_(-2)    13.8e-6 # hydrogen sulfide = 5.73e-6
+    H(0)      2.e-9   # Table 2, [H2] = 1e-9
+    Ace       0.5e-5  # Table 2, [Acetate] = 1e-5 C-mol/L
+    Glucose   0.166667e-7  # Table 2, [Glucose] = 1e-7 C-mol/L
+    [he]      1.E-5  # from Fig.2A
+    X_cfb_a     1.1e-6
+    X_cfb_i     0.9e-6
+    X_srb_a     1.1e-6
+    X_srb_i     0.9e-6
+    -water    1 # kg
+
+EQUILIBRIUM_PHASES 1
+    HOM(s)     0.  10
+    H2(g)     -5.914996   1  # Table 2, [H2] = 1e-9
+    FeS(ppt)   0 0 precipitate_only
+    Fe(OH)3(a) 0 0 precipitate_only
+
+SAVE solution 1
+
+END
+
+TITLE .
+!------------------------------------------------------------------------
+ The model in Bajracharya et al. (2022) Geomicrobiology Journal 39, 1–16.
+ https://doi.org/10.1080/01490451.2021.1998256
+ Cellulose hydrolysis:
+    [C6H12O6]n  =  [C6H12O6]n-1 + C6H12O6
+ Glucose fermentation:
+    C6H12O6 + 4H2O = 2 Ace- + 2 HCO3- + 4H+ + 4H2(aq)
+    C6H12O6 + 2H2O = 2 Ace- + 2 CO2 + 2H+ + 4H2(aq)
+ Microbial sulfate reduction:
+    Ace- + SO4-2 = HS- + 2 HCO3-
+    Ace- + SO4-2 +2 H+ =  HS- + 2 CO2 + 2 H2O
+    4 H2(aq) + SO4-2 + H+ = HS- + 4H2O
+ Overall:
+    C6H12O6 + 3 SO4-2 + 3 H+ = 3 HS- + 6 CO2 + 6 H2O
+ because Na2SO4 is added to compensate the reduction:
+    C6H12O6 + 3 H+ = 3 HS- + 6 CO2 + 6 H2O + 6 Na+
+ ...and FeCl2 is added to precipitate sulfide:
+    C6H12O6 = 3 FeS(s) + 6 CO2 + 6 H2O + 6 Na+ + 6 Cl-
+ Growth of CFB:
+    0.175 C6H12O6 + 0.2 NH4+ = CH1.8O0.5N0.2 + 0.05 HCO3- + 0.4 H2O + 0.25 H+
+ Production of extracellular hydrolytic enzymes [he]:
+    0.175 C6H12O6 + 0.2 NH4+ = [he] + 0.05 HCO3- + 0.4 H2O + 0.25 H+
+ Growth of SRB: in Bajracharya et al.(2022) only growth with acetate is considered:
+    0.525 CH3COO- +0.2 NH4+ +0.275 H+ = CH1.8O0.5N0.2 +0.05 HCO3- +0.4 H2O
+ Growth with H2+CO2+acetate is NOT included.
+!------------------------------------------------------------------------
+
+USE solution 1
+
+EQUILIBRIUM_PHASES 1
+    HOM(s)     0.  10
+    FeS(ppt)   0 0 precipitate_only
+    Fe(OH)3(a) 0 0 precipitate_only
+
+# Some PHREEQC peculiarities in 'KINETICS':
+# - If the rate is going to be negative, the value of "-m0" can not be zero
+#   (default is 1).
+# - All elements in the formula should exist initially, otherwise strange
+#   redox things happen sometimes.  So, if simulating a system initially without
+#   acetate, set the concentration of 'Ace' to 1e-25 in SOLUTION 1
+
+# Hydrolysis: the stoichiometry corresponds to a rate in C-mol of glucose
+#    [HOM] is not needed in the stoichiometry
+# Fermentation: the rate is in C-mol of glucose
+# HE_prod: assumes the same stoichiometry as the synthesis of CFB biomass
+# CFB_gr: one C-mol of glucose gives one C-mol biomass
+# SRB_gr_ac: one C-mol of acetate gives one C-mol biomass
+# SRB_gr_H2: one H2-mol gives one C-mol biomass. Note that this growth rate is set to zero.
+# so4_red_acet: the rate is in C-mol of acetate.
+#    FeCl2 is generated in the same proportion as sulfide.
+#    Sulfate is not consumed to keep its concentration constant.
+#    The reaction is: 0.5 Ace- = HCO3- + 0.5 HS- + 0.5 FeCl2 + Na+
+#    instead of: 0.5 Ace- + 0.5 SO4-2  =  HCO3- + 0.5 HS-
+# so4_red_H2: the rate is in mol of H2(aq).
+#    FeCl2 is generated in the same proportion as sulfide.
+#    Sulfate is not consumed to keep its concentration constant.
+#    The reaction is: H2(aq) + 0.25 H+ = 0.25 HS- + H2O + 0.25 FeCl2 + 0.5 Na+
+#    instead of: H2(aq) + 0.25 SO4-2 + 0.25 H+ = 0.25 HS- + H2O
+
+KINETICS 1
+hydrolysis
+    -formula  [hom] -0.166667  Glucose 0.166667
+    -tol      1e-10
+fermentation
+    -formula  Glucose -0.166667  H2O -0.33333  Ace 0.33333  CO2 0.33333  H 0.33333  H2 0.66667
+    -tol      1e-12
+HE_prod
+    -formula  Glucose -0.175  NH4 -0.2  [he] 1  CO2 0.05  H 0.20  H2O 0.45
+    -tol      1e-10
+HE_dec
+    -formula  [he] -1
+    -tol      1e-10
+CFB_gr
+    -formula  Glucose -0.175  NH4 -0.2  X_cfb_a 1  CO2 0.05  H 0.20  H2O 0.45
+    -tol      1e-12
+CFB_dec
+    -formula  X_cfb_a  1
+    -tol      1e-12
+CFB_deact
+    -formula  X_cfb_a -1  X_cfb_i 1
+    -tol      1e-12
+CFB_act
+    -formula  X_cfb_a  1  X_cfb_i -1
+    -tol      1e-12
+CFBi_dec
+    -formula  X_cfb_i  1
+    -tol      1e-12
+so4_red_acet
+    -formula  Ace -0.5  HCO3 1  HS_ 0.5  FeCl2 0.5  Na 1 # SO4 -0.5
+    -tol      1e-12
+so4_red_H2
+    -formula  H2 -1  H -0.25  H2O 1  HS_ 0.25  FeCl2 0.25  Na 0.5 #  SO4 -0.25
+    -tol      1e-12
+SRB_gr_ac
+    -formula  Ace -0.525  NH4 -0.2  H -0.275  H2O 0.4  HCO3 0.05  X_srb_a 1
+    -tol      1e-12
+SRB_dec
+    -formula  X_srb_a 1
+    -tol      1e-12
+SRB_deact
+    -formula  X_srb_a -1  X_srb_i  1
+    -tol      1e-12
+SRB_act
+    -formula  X_srb_a 1  X_srb_i  -1
+    -tol      1e-12
+SRBi_dec
+    -formula  X_srb_i 1
+    -tol      1e-12
+
+# nr    0  1   2   3    4  5 6 7 8 9 10 11 12   13  14   15
+# tot   0 0.1 0.3 0.5   1  2 3 4 5 6  7 10 12.5 15.  17.5 20.  30 40 50 60 75 100 125 150 175 200 250 300
+-steps  0 0.1 0.2 0.2 0.5  1 1 1 1 1  1  3  2.5  2.5  2.5  2.5 10 10 10 10 15  25  25  25  25  25  50  50 days
+-cvode true
+-cvode_order 5
+-cvode_steps 1120 # max nr of steps taken during one invocation of CVODE, def.100
+-bad_step_max 1000
+
+INCREMENTAL_REACTIONS true
+ 
+SELECTED_OUTPUT 1
+    -file                 Bajracharya_et_al(2022).tsv
+    -high_precision       true
+    -reset                false
+    -solution             true
+    -time                 true
+    -step                 true
+    -pH                   true
+    -pe                   true
+    -alkalinity           true
+    -ionic_strength       true
+    -totals               Ace  S(6)  S_(-2)  H(0)  C(4)  Fe(2)  Cl
+                          Na  N(-3)  [he]  Glucose
+                          X_cfb_a  X_cfb_i  X_srb_a  X_srb_i
+    -equilibrium_phases   FeS(ppt)
+    -saturation_indices   H2S_(g)  H2(g)
+    -calculate_values     Hours  Days  DG0r_frm  DGr_frm
+                          DG0r_srAc  DGr_srAc  DG0r_srH2  DGr_srH2
+                          ThermFunc_frm  ThermFunc_srAc  ThermFunc_srH2  R_frm
+                          R_hydrol  R_HE_prod  R_HE_dec  R_CFB_gr
+                          R_CFB_dec  R_CFB_deact  R_CFB_act  R_CFBi_dec
+                          R_SO4_red_acet  R_SO4_red_H2  R_SRB_gr_ac  R_SRB_gr_H2
+                          R_SRB_dec  R_SRB_deact  R_SRB_act  R_SRBi_dec
+                          G_CFB  E_HE  TE_CFB  ME_CFB
+                          mu_CFB  G_SRB  TE_SRB  ME_SRB  mu_SRB  Y_glucose  Y_acetate  Y_H2
+    -active               true
+    -user_punch           true
+
+USER_PUNCH 1
+    -headings  Eh_mV logK0frm logQfrm  logK0srH2  logQsrH2  logK0srAcet  logQsrAc
+    -start
+ 10 R = 0.0083144626 # J/(mol K)
+ 20 ln10 = 2.302585092994046
+100 slope = LOG(10)*8.31451*TK/96485.309
+110 PUNCH -LA("e-")*slope*1000
+130 REM # lnK° = ln(10) logK = -DG°r / (RT)
+140 logK = - CALC_VALUE("DG0r_frm") / (ln10*R*TK)
+150 logQ = CALC_VALUE("logQfrm")
+160 PUNCH logK, logQ
+240 logK = - CALC_VALUE("DG0r_srH2") / (ln10*R*TK)
+250 logQ = CALC_VALUE("logQsrH2")
+260 PUNCH logK, logQ
+340 logK = - CALC_VALUE("DG0r_srAc") / (ln10*R*TK)
+350 logQ = CALC_VALUE("logQsrAc")
+360 PUNCH logK, logQ
+    -end
+
+USER_PRINT
+-start
+  10 PRINT "-******************************************************"
+  11 IF(CALC_VALUE("Days")>0) THEN ld = log10(CALC_VALUE("Days")) ELSE ld = -99
+  15 PRINT "Days = ",STR_F$(CALC_VALUE("Days"),8,2),"  log[Days] = ",STR_F$(ld,8,2)
+  20 slope = LOG(10)*8.31451*TK/96485.309
+  30 PRINT "Eh =",TRIM(STR_F$(1000*(-LA("e-")*slope),7,1))," mV  (slope =",STR_F$(slope*1000,6,2),", pe = "STR_F$(-LA("e-"),6,2),")"
+  40 PRINT "*******************************************************"
+ 120 PRINT "CFBa Cells/mL = ",CALC_VALUE("CellsCFBa")
+ 130 PRINT "CFBi Cells/mL = ",CALC_VALUE("CellsCFBi")
+9999 PRINT "*******************************************************"
+-end
+
+USER_GRAPH 1  Concentrations-20d
+    -chart_title            "Fig.S2A - Concentrations (inset)"
+    -headings               Glucose-C Acetate-C HE H2(aq)
+    -axis_titles            "Time (d)" "[mol/kg_H2O] x 10^4" "[mol/kg_H2O]"
+    -axis_scale x_axis      0 20  auto auto
+    -axis_scale y_axis      0 2.5  auto auto
+    -initial_solutions      true
+    -connect_simulations    false
+    -plot_concentration_vs  t
+  -start
+10 x = CALC_VALUE("Days")
+20 PLOT_XY x,6*TOT("Glucose")*10000, symbol = Triangle, color = Black
+30 PLOT_XY x,2*TOT("Ace")*10000, symbol = XCross, color = Blue
+40 PLOT_XY x,TOT("[he]")*10000, symbol = Plus, color = Red
+60 PLOT_XY x,MOL("H2"), symbol = TriangleDown, color = Red, y_axis = 2
+  -end
+  -batch Bajracharya_et_al(2022)-FigS2A-20d.png
+
+USER_GRAPH 2  Concentrations-300d
+    -chart_title            "Fig.S2A - Concentrations"
+    -headings               Glucose-C Acetate-C HE H2(aq)
+    -axis_titles            "Time (d)" "[mol/kg_H2O] x 10^4" "[mol/kg_H2O]"
+    -axis_scale x_axis      0 300  auto auto
+    -axis_scale y_axis      0 2.5  auto auto
+    -initial_solutions      true
+    -connect_simulations    false
+    -plot_concentration_vs  t
+  -start
+10 x = CALC_VALUE("Days")
+20 PLOT_XY x,6*TOT("Glucose")*10000, symbol = Triangle, color = Black
+30 PLOT_XY x,2*TOT("Ace")*10000, symbol = XCross, color = Blue
+40 PLOT_XY x,TOT("[he]")*10000, symbol = Plus, color = Red
+60 PLOT_XY x,MOL("H2"), symbol = TriangleDown, color = Red, y_axis = 2
+  -end
+  -batch Bajracharya_et_al(2022)-FigS2A-300d.png
+
+USER_GRAPH 3  Bacteria-20d
+    -chart_title            "Fig.S2B - Bacteria (inset)"
+    -headings               CFBa SRBa CFBi SRBi
+    -axis_titles            "Time (d)" "[C-mol biomass/kg_H2O] x 10^5"
+    -axis_scale x_axis      0 20  auto  auto
+    -axis_scale y_axis      0 1  auto   auto
+    -initial_solutions      true
+    -connect_simulations    false
+    -plot_concentration_vs  t
+  -start
+10 x= CALC_VALUE("Days")
+20 PLOT_XY x,MOL("X_cfb_a")*100000, symbol = Square, color = Black
+30 PLOT_XY x,MOL("X_srb_a")*100000, symbol = Square, color = Red
+40 PLOT_XY x,MOL("X_cfb_i")*100000, symbol = Plus, color = Black
+50 PLOT_XY x,MOL("X_srb_i")*100000, symbol = Plus, color = Red
+  -end
+  -batch Bajracharya_et_al(2022)-FigS2B-20d.png
+
+USER_GRAPH 4  Bacteria-300d
+    -chart_title            "Fig.S2B - Bacteria"
+    -headings               CFBa SRBa CFBi SRBi
+    -axis_titles            "Time (d)" "[C-mol biomass/kg_H2O] x 10^5"
+    -axis_scale x_axis      0 300  auto  auto
+    -axis_scale y_axis      0 4  auto   auto
+    -initial_solutions      true
+    -connect_simulations    false
+    -plot_concentration_vs  t
+  -start
+10 x= CALC_VALUE("Days")
+20 PLOT_XY x,MOL("X_cfb_a")*100000, symbol = Square, color = Black
+30 PLOT_XY x,MOL("X_srb_a")*100000, symbol = Square, color = Red
+40 PLOT_XY x,MOL("X_cfb_i")*100000, symbol = Plus, color = Black
+50 PLOT_XY x,MOL("X_srb_i")*100000, symbol = Plus, color = Red
+  -end
+  -batch Bajracharya_et_al(2022)-FigS2B-300d.png
+
+USER_GRAPH 5  CFB-20d
+    -chart_title            "Fig.S3A - CFB (inset)"
+    -headings               G_CFB E_HE TE_CFB ME_CFB mu_CFB
+    -axis_titles            "Time (d)" "kJ / (C-mol biomass day)" "1 / day"
+    -axis_scale x_axis      0 20  auto auto
+    -axis_scale y_axis      0 50  auto auto
+    -axis_scale sy_axis     0 0.15 auto auto
+    -initial_solutions      true
+    -connect_simulations    false
+    -plot_concentration_vs  t
+  -start
+10 x = CALC_VALUE("Days")
+20 PLOT_XY x,CALC_VALUE("G_CFB"), symbol = Triangle, color = Black
+30 PLOT_XY x,CALC_VALUE("E_HE"), symbol = XCross, color = Black
+40 PLOT_XY x,CALC_VALUE("TE_CFB"), symbol = Plus, color = Black
+50 PLOT_XY x,CALC_VALUE("ME_CFB"), symbol = Plus, color = Green
+60 PLOT_XY x,CALC_VALUE("mu_CFB"), symbol = TriangleDown, color = Blue, y_axis = 2
+  -end
+  -batch Bajracharya_et_al(2022)-FigS3A-20d.png
+
+USER_GRAPH 6  CFB-300d
+    -chart_title            "Fig.S3A - CFB"
+    -headings               G_CFB E_HE TE_CFB ME_CFB mu_CFB
+    -axis_titles            "Time (d)" "kJ / (C-mol biomass day)" "1 / day"
+    -axis_scale x_axis      0 300  auto auto
+    -axis_scale y_axis      0 50  auto auto
+    -axis_scale sy_axis     0 0.15 auto auto
+    -initial_solutions      true
+    -connect_simulations    false
+    -plot_concentration_vs  t
+  -start
+10 x = CALC_VALUE("Days")
+20 PLOT_XY x,CALC_VALUE("G_CFB"), symbol = Triangle, color = Black
+30 PLOT_XY x,CALC_VALUE("E_HE"), symbol = XCross, color = Black
+40 PLOT_XY x,CALC_VALUE("TE_CFB"), symbol = Plus, color = Black
+50 PLOT_XY x,CALC_VALUE("ME_CFB"), symbol = Plus, color = Green
+60 PLOT_XY x,CALC_VALUE("mu_CFB"), symbol = TriangleDown, color = Blue, y_axis = 2
+  -end
+  -batch Bajracharya_et_al(2022)-FigS3A-300d.png
+
+USER_GRAPH 7  SRB-20d
+    -chart_title            "Fig.S3B - SRB (inset)"
+    -headings               G_SRB TE_SRB ME_SRB mu_SRB
+    -axis_titles            "Time (d)" "kJ / (C-mol biomass day)" "1 / (C-mol biomass day)"
+    -axis_scale x_axis      0 20  auto auto
+    -axis_scale y_axis      0 50  auto auto
+    -axis_scale sy_axis     0 0.06 auto auto
+    -initial_solutions      true
+    -connect_simulations    false
+    -plot_concentration_vs  t
+  -start
+10 x = CALC_VALUE("Days")
+20 PLOT_XY x,CALC_VALUE("G_SRB"), symbol = Triangle, color = Red
+40 PLOT_XY x,CALC_VALUE("TE_SRB"), symbol = Plus, color = Red
+50 PLOT_XY x,CALC_VALUE("ME_SRB"), symbol = Plus, color = Green
+60 PLOT_XY x,CALC_VALUE("mu_SRB"), symbol = TriangleDown, color = Blue, y_axis = 2
+  -end
+  -batch Bajracharya_et_al(2022)-FigS3B-20d.png
+
+USER_GRAPH 8  SRB-300d
+    -chart_title            "Fig.S3B - SRB"
+    -headings               G_SRB TE_SRB ME_SRB mu_SRB
+    -axis_titles            "Time (d)" "kJ / (C-mol biomass day)" "1 / (C-mol biomass day)"
+    -axis_scale x_axis      0 300  auto auto
+    -axis_scale y_axis      0 50  auto auto
+    -axis_scale sy_axis     0 0.06 auto auto
+    -initial_solutions      true
+    -connect_simulations    false
+    -plot_concentration_vs  t
+  -start
+10 x = CALC_VALUE("Days")
+20 PLOT_XY x,CALC_VALUE("G_SRB"), symbol = Triangle, color = Red
+40 PLOT_XY x,CALC_VALUE("TE_SRB"), symbol = Plus, color = Red
+50 PLOT_XY x,CALC_VALUE("ME_SRB"), symbol = Plus, color = Green
+60 PLOT_XY x,CALC_VALUE("mu_SRB"), symbol = TriangleDown, color = Blue, y_axis = 2
+  -end
+  -batch Bajracharya_et_al(2022)-FigS3B-300d.png
+
+USER_GRAPH 9  Yields-300d
+    -chart_title            "Fig.4 - Yields"
+    -headings               Y_CFB_glucose Y_SRB_acetate Y_SRB_H2
+    -axis_titles            "Time (d)" "C-mol biomass / J"
+    -axis_scale x_axis      0 300  auto auto
+    -axis_scale y_axis      0 0.003  auto auto
+    -initial_solutions      true
+    -connect_simulations    false
+    -plot_concentration_vs  t
+  -start
+10 x = CALC_VALUE("Days")
+20 PLOT_XY x,CALC_VALUE("Y_glucose"), symbol = Triangle, color = Black
+40 PLOT_XY x,CALC_VALUE("Y_acetate"), symbol = Plus, color = Red
+50 PLOT_XY x,CALC_VALUE("Y_H2"), symbol = TriangleDown, color = Cyan
+  -end
+  -batch Bajracharya_et_al(2022)-Fig4-300d.png
+
+USER_GRAPH 10  Eh+pH
+    -headings               Eh_mV pH
+    -axis_titles            "log(Time (d))" "Eh (mV)" "pH"
+    -chart_title            "Eh and pH"
+    -axis_scale x_axis      -1 3 1 auto
+    -axis_scale y_axis      -400 0 auto auto
+    -axis_scale sy_axis     6 8 1 auto
+    -initial_solutions      true
+    -connect_simulations    false
+    -plot_concentration_vs  x
+  -start
+10 IF(SIM_TIME > 0) THEN x = log10(CALC_VALUE("Days")) ELSE x = -15
+20 slope = LOG(10)*8.31451*TK/96485.309
+30 PLOT_XY x, 1000*(-LA("e-")*slope), symbol = Plus, color = Brown
+40 PLOT_XY x, -LA("H+"), symbol = Circle, color = Cyan, y_axis = 2
+  -end
+  -batch Bajracharya_et_al(2022)-Eh_pH.png
+
+END
