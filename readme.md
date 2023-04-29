@@ -1,4 +1,4 @@
-# Modelling microbial processes using a bioenergetic approach #
+# A Phreeqc model for microbial processes using a bioenergetic approach #
 
 [Bajracharya et al. (2022)][5] have published a brilliant paper describing a method to calculate microbial catabolism, anabolism, dormancy and maintenance (including decay). The method is here implemented using the [Phreeqc][6] code by [Parkhurst and Appelo (2013)][7]. The model is available in the [releases section][8].
 
